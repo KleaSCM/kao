@@ -35,6 +35,7 @@
 
 	let KaomojiList = $state(KaomojiDataRaw as KaomojiEntry[]);
 	let RecentKaomojis = $state<KaomojiEntry[]>([]);
+	let FavoriteKaomojis = $state<KaomojiEntry[]>([]);
 
 	let SearchQuery = $state("");
 	let LastCopied = $state("");
@@ -158,6 +159,26 @@
 				console.error("Failed to load user kaomojis", err);
 			}
 
+			// Load persistent recents
+			try {
+				const recents: KaomojiEntry[] = await invoke("LoadRecents");
+				if (recents && recents.length > 0) {
+					RecentKaomojis = recents;
+				}
+			} catch (err) {
+				console.error("Failed to load recents", err);
+			}
+
+			// Load persistent favorites
+			try {
+				const favorites: KaomojiEntry[] = await invoke("LoadFavorites");
+				if (favorites && favorites.length > 0) {
+					FavoriteKaomojis = favorites;
+				}
+			} catch (err) {
+				console.error("Failed to load favorites", err);
+			}
+
 			RecomputeCols();
 		})();
 
@@ -196,23 +217,48 @@
 	}
 
 	function AddToRecents(entry: KaomojiEntry) {
+		// Update local state immediately for responsive UI
 		RecentKaomojis = [
 			entry,
 			...RecentKaomojis.filter((k) => k.Character !== entry.Character),
-		].slice(0, 8);
+		].slice(0, 20);
+
+		// Persist to backend asynchronously
+		invoke("SaveRecent", { entry }).catch((err) =>
+			console.error("Failed to save recent", err),
+		);
 	}
 
 	function HandleCopySuccess(character: string, index: number) {
 		LastCopied = character;
 		LastCopiedIndex = index;
-		ShowToast = false;
-		tick().then(() => {
-			ShowToast = true;
-			setTimeout(() => {
-				ShowToast = false;
-				LastCopiedIndex = -1;
-			}, 2000);
-		});
+		ShowToast = true;
+		setTimeout(() => (ShowToast = false), 2000);
+	}
+
+	function IsFavorite(character: string): boolean {
+		return FavoriteKaomojis.some((k) => k.Character === character);
+	}
+
+	async function ToggleFavoriteClick(e: Event, entry: KaomojiEntry) {
+		e.stopPropagation(); // Prevent card click
+		try {
+			const isFavorite: boolean = await invoke("ToggleFavorite", {
+				entry,
+			});
+
+			if (isFavorite) {
+				// Added to favorites
+				FavoriteKaomojis = [...FavoriteKaomojis, entry];
+			} else {
+				// Removed from favorites
+				FavoriteKaomojis = FavoriteKaomojis.filter(
+					(k) => k.Character !== entry.Character,
+				);
+			}
+		} catch (err) {
+			console.error("Failed to toggle favorite", err);
+		}
 	}
 
 	async function SubmitNewKaomoji() {
@@ -379,7 +425,25 @@
 				title={item.Tags.join(", ")}
 				tabindex={SelectedIndex === i ? 0 : -1}
 			>
-				{item.Character}
+				<span class="KaomojiText">{item.Character}</span>
+				<span
+					class="FavoriteStar"
+					class:IsFavorited={IsFavorite(item.Character)}
+					onclick={(e) => ToggleFavoriteClick(e, item)}
+					onkeydown={(e) =>
+						(e.key === "Enter" || e.key === " ") &&
+						ToggleFavoriteClick(e, item)}
+					title={IsFavorite(item.Character)
+						? "Remove from favorites"
+						: "Add to favorites"}
+					aria-label={IsFavorite(item.Character)
+						? "Remove from favorites"
+						: "Add to favorites"}
+					role="button"
+					tabindex="0"
+				>
+					{IsFavorite(item.Character) ? "★" : "☆"}
+				</span>
 			</button>
 		{/each}
 	</div>
@@ -575,12 +639,39 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		position: relative;
 		transition: var(--TransitionFast);
 		color: var(--ColorText);
 		min-height: 50px;
 		white-space: pre;
 		overflow: hidden;
 		border: 2px solid transparent;
+	}
+
+	.KaomojiText {
+		flex: 1;
+		text-align: center;
+	}
+
+	.FavoriteStar {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		font-size: 1.2rem;
+		cursor: pointer;
+		color: rgba(255, 255, 255, 0.3);
+		transition: all 0.2s ease;
+		user-select: none;
+		z-index: 10;
+	}
+
+	.FavoriteStar:hover {
+		color: rgba(255, 215, 0, 0.8);
+		transform: scale(1.2);
+	}
+
+	.FavoriteStar.IsFavorited {
+		color: rgb(255, 215, 0);
 	}
 
 	.KaomojiCard.IsSelected {
