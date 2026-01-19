@@ -30,6 +30,8 @@
 	import { onMount, tick } from "svelte";
 	import Fuse from "fuse.js";
 	import { invoke } from "@tauri-apps/api/core";
+	import { register } from "@tauri-apps/plugin-global-shortcut";
+	import { getCurrentWindow } from "@tauri-apps/api/window";
 	import type { KaomojiEntry } from "$lib/Types";
 	import KaomojiDataRaw from "$lib/Data/Kaomoji.json";
 
@@ -43,6 +45,7 @@
 	let ShowToast = $state(false);
 	let ShowAddModal = $state(false);
 	let SelectedIndex = $state(0);
+	let AutoPasteEnabled = $state(false);
 
 	let GridEl: HTMLDivElement | null = null;
 	let GridCols = $state(3);
@@ -179,6 +182,29 @@
 				console.error("Failed to load favorites", err);
 			}
 
+			// Register global shortcut: Ctrl+Shift+Space (Win/Linux) or Cmd+Shift+Space (Mac)
+			try {
+				await register("CommandOrControl+Shift+Space", async () => {
+					const window = getCurrentWindow();
+					const isVisible = await window.isVisible();
+
+					if (isVisible) {
+						await window.hide();
+					} else {
+						await window.show();
+						await window.setFocus();
+					}
+				});
+			} catch (err) {
+				console.error("Failed to register global shortcut", err);
+			}
+
+			// Load auto-paste preference from localStorage
+			const autoPastePref = localStorage.getItem("autoPasteEnabled");
+			if (autoPastePref === "true") {
+				AutoPasteEnabled = true;
+			}
+
 			RecomputeCols();
 		})();
 
@@ -192,7 +218,12 @@
 		let successState = false;
 
 		try {
-			await invoke("CopyToClipboard", { text: character });
+			// Use CopyAndPaste if auto-paste enabled, otherwise normal copy
+			if (AutoPasteEnabled) {
+				await invoke("CopyAndPaste", { text: character });
+			} else {
+				await invoke("CopyToClipboard", { text: character });
+			}
 			successState = true;
 		} catch (err) {
 			console.warn("Native copy failed, trying fallback...", err);
@@ -386,13 +417,27 @@
 				class="SearchInput GlassCard"
 			/>
 		</div>
-		<button
-			class="AddButton GlassCard"
-			onclick={() => (ShowAddModal = true)}
-			aria-label="Add new kaomoji"
-		>
-			＋
-		</button>
+		<div class="HeaderActions">
+			<label class="AutoPasteToggle">
+				<input
+					type="checkbox"
+					bind:checked={AutoPasteEnabled}
+					onchange={() =>
+						localStorage.setItem(
+							"autoPasteEnabled",
+							String(AutoPasteEnabled),
+						)}
+				/>
+				<span>Auto-paste</span>
+			</label>
+			<button
+				class="AddButton GlassCard"
+				onclick={() => (ShowAddModal = true)}
+				aria-label="Add new kaomoji"
+			>
+				＋
+			</button>
+		</div>
 	</div>
 
 	{#if RecentKaomojis.length > 0 && !SearchQuery}
@@ -572,6 +617,34 @@
 		background: var(--ColorPrimary);
 		color: white;
 		transform: rotate(90deg) scale(1.1);
+	}
+
+	.HeaderActions {
+		display: flex;
+		align-items: center;
+		gap: calc(var(--SpacingUnit) / 2);
+	}
+
+	.AutoPasteToggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.85rem;
+		color: var(--ColorText);
+		opacity: 0.8;
+		cursor: pointer;
+		user-select: none;
+		transition: opacity 0.2s ease;
+	}
+
+	.AutoPasteToggle:hover {
+		opacity: 1;
+	}
+
+	.AutoPasteToggle input[type="checkbox"] {
+		cursor: pointer;
+		width: 16px;
+		height: 16px;
 	}
 
 	.RecentsSection {

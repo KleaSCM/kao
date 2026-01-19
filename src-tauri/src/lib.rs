@@ -47,6 +47,44 @@ fn CopyToClipboard(app: tauri::AppHandle, text: String) -> Result<(), String> {
 	app.clipboard().write_text(text).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+#[allow(non_snake_case)]
+fn CopyAndPaste(app: tauri::AppHandle, text: String) -> Result<(), String> {
+	use tauri_plugin_clipboard_manager::ClipboardExt;
+	use enigo::{Enigo, Key, Keyboard, Settings};
+	use tauri::Manager;
+	
+	// Copy to clipboard first
+	app.clipboard().write_text(text).map_err(|e| e.to_string())?;
+	
+	// Hide the window so paste goes to the correct target
+	if let Some(window) = app.get_webview_window("main") {
+		let _ = window.hide();
+	}
+	
+	// Brief delay to ensure clipboard is synced and window is hidden
+	std::thread::sleep(std::time::Duration::from_millis(50));
+	
+	// Simulate paste hotkey (Ctrl+V on Windows/Linux, Cmd+V on macOS)
+	let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
+	
+	#[cfg(target_os = "macos")]
+	{
+		enigo.key(Key::Meta, enigo::Direction::Press).map_err(|e| e.to_string())?;
+		enigo.key(Key::Unicode('v'), enigo::Direction::Click).map_err(|e| e.to_string())?;
+		enigo.key(Key::Meta, enigo::Direction::Release).map_err(|e| e.to_string())?;
+	}
+	
+	#[cfg(not(target_os = "macos"))]
+	{
+		enigo.key(Key::Control, enigo::Direction::Press).map_err(|e| e.to_string())?;
+		enigo.key(Key::Unicode('v'), enigo::Direction::Click).map_err(|e| e.to_string())?;
+		enigo.key(Key::Control, enigo::Direction::Release).map_err(|e| e.to_string())?;
+	}
+	
+	Ok(())
+}
+
 #[allow(non_snake_case)]
 fn BackupCorrupt(filePath: &std::path::Path) {
 	use std::time::{SystemTime, UNIX_EPOCH};
@@ -426,7 +464,8 @@ pub fn Run() {
 	tauri::Builder::default()
 		.plugin(tauri_plugin_clipboard_manager::init())
 		.plugin(tauri_plugin_opener::init())
-		.invoke_handler(tauri::generate_handler![Greet, CopyToClipboard, SaveKaomoji, LoadUserKaomojis, LoadRecents, SaveRecent, LoadFavorites, ToggleFavorite])
+		.plugin(tauri_plugin_global_shortcut::Builder::new().build())
+		.invoke_handler(tauri::generate_handler![Greet, CopyToClipboard, CopyAndPaste, SaveKaomoji, LoadUserKaomojis, LoadRecents, SaveRecent, LoadFavorites, ToggleFavorite])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }
