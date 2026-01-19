@@ -1,0 +1,8 @@
+Persist recents + favorites
+Recents resetting hurts. Favorites makes it feel like their tool.
+
+Global shortcut + always-on-top mini window (optional)
+This is the killer feature for a picker. It becomes muscle memory.
+
+One-click “copy+paste” mode (optional)
+Copy is nice; paste into the active app is what makes people love it.

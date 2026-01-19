@@ -1,0 +1,90 @@
+/**
+ * Design System and Visual Theme.
+ *
+ * Implements a premium sapphic aesthetic utilizing glassmorphism,
+ * gradients, and high-contrast typography.
+ *
+ * COLOR PALETTE STRATEGY:
+ * - Primary: Soft pink for interactive accents.
+ * - Secondary/Accent: Lavender to Deep Purple for depth and gradients.
+ * - Background: Adaptive plum tones for light/dark parity.
+ *
+ * VISUAL CONTRACTS:
+ * - Minimum blur of 10px for all glass surfaces.
+ * - Standardized spacing unit (8px) for consistent rhythm.
+ *
+ * Author: KleaSCM
+ * Email: KleaSCM@gmail.com
+ */
+
+:root {
+	--ColorPrimary: #ff85a1;
+	--ColorSecondary: #fbc2eb;
+	--ColorAccent: #a18cd1;
+	--ColorBackground: #fff5f7;
+	--ColorText: #4a0e2e;
+	--ColorSurface: #ffffff;
+	--SpacingUnit: 8px;
+	--BorderRadius: 16px;
+	--TransitionFast: 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--ColorBackground: #1a0b16;
+		/* Deep dark plum */
+		--ColorText: #ffdfef;
+		/* Light pinkish text */
+		--ColorSurface: #2d132c;
+		/* Dark surface */
+	}
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'Inter', sans-serif;
+	background-color: var(--ColorBackground);
+	color: var(--ColorText);
+	overflow: hidden;
+	overflow-x: hidden;
+}
+
+.MainContainer {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	box-sizing: border-box;
+	padding: calc(var(--SpacingUnit) * 2);
+}
+
+.GlassCard {
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: var(--BorderRadius);
+	box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+
+::-webkit-scrollbar {
+	width: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--ColorAccent);
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--ColorPrimary);
+}

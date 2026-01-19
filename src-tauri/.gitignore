@@ -1,0 +1,13 @@
+# Rust / Cargo
+/target/
+Cargo.lock
+
+# Tauri
+/gen/
+**/*.pfx
+**/*.p12
+**/*.cer
+
+# OS junk
+.DS_Store
+Thumbs.db
