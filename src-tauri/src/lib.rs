@@ -47,6 +47,7 @@ fn CopyToClipboard(app: tauri::AppHandle, text: String) -> Result<(), String> {
 	app.clipboard().write_text(text).map_err(|e| e.to_string())
 }
 
+#[cfg(feature = "autopaste")]
 #[tauri::command]
 #[allow(non_snake_case)]
 fn CopyAndPaste(app: tauri::AppHandle, text: String) -> Result<(), String> {
@@ -83,6 +84,13 @@ fn CopyAndPaste(app: tauri::AppHandle, text: String) -> Result<(), String> {
 	}
 	
 	Ok(())
+}
+
+#[cfg(not(feature = "autopaste"))]
+#[tauri::command]
+#[allow(non_snake_case)]
+fn CopyAndPaste(app: tauri::AppHandle, text: String) -> Result<(), String> {
+	CopyToClipboard(app, text)
 }
 
 #[allow(non_snake_case)]

@@ -39,20 +39,24 @@ Search box → "happy"        → (◕‿◕)  (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧  ヽ
            → "cat:Love tag:kiss" → Combine filters!
 ```
 
-### Keyboard Shortcuts
+### Global Shortcuts
 
 | Key | Action |
 |-----|--------|
+| `Ctrl + Shift + Space` | Toggle app visibility (Global) |
 | `Arrow Keys` | Navigate through results |
 | `Enter` | Copy selected kaomoji |
-| `Escape` | Clear search |
+| `Escape` | Clear search / Hide app |
 | `Type to search` | Instant filtering |
 
-### Customization
+### Customization & Enhancements
 
-- **Add your own kaomojis** with custom tags and categories
-- **Recent history** - Quick access to your last 8 copied items
-- **Persistent storage** - Your custom entries are saved locally and privately
+- **Auto-Paste Mode** - Instantly paste copied kaomojis into your active app
+- **Global Hotkey** - Access Kao from anywhere with `Ctrl+Shift+Space`
+- **Favorites System** - Star your most-used kaomojis for quick access
+- **Add your own kaomojis** - With custom tags and categories
+- **Persistent History** - Remembers your last 20 copied items across restarts
+- **Persistent Storage** - Your custom entries and favorites are saved locally and privately
 
 ### Categories Included
 

@@ -1,7 +1,7 @@
 [package]
-name = "tauri-app"
+name = "kao"
 version = "0.1.0"
-description = "A Tauri App"
+description = "kao"
 authors = ["KleaSCM"]
 edition = "2021"
 
@@ -20,10 +20,22 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-global-shortcut = "2.3.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-clipboard-manager = "2"
-windows-sys = { version = "0.61.2", features = ["Win32_Storage_FileSystem", "Win32_Foundation"] }
-tauri-plugin-global-shortcut = "2.3.1"
-enigo = "0.6.1"
+
+# Optional: Enigo behind a feature so "no-autopaste".
+enigo = { version = "0.6.1", optional = true }
+
+[features]
+default = ["autopaste"]
+autopaste = ["dep:enigo"]
+
+# Windows-only deps (do NOT include these on other platforms)
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = [
+  "Win32_Storage_FileSystem",
+  "Win32_Foundation",
+] }
 
